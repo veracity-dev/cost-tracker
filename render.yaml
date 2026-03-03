@@ -1,0 +1,10 @@
+services:
+  - type: web
+    runtime: docker
+    name: cost-tracker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production

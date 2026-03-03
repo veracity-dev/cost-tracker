@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { services, entities, serviceAccounts, paymentCards, costRecords, apiCredentials } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import initSqlJs from "sql.js";
+import fs from "fs";
+import path from "path";
 
 export async function GET() {
   const [
@@ -169,8 +171,10 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Open the SQLite database using sql.js
-    const SQL = await initSqlJs();
+    // Open the SQLite database using sql.js with explicit WASM path
+    const wasmPath = path.join(process.cwd(), "sql-wasm.wasm");
+    const wasmFile = fs.readFileSync(wasmPath);
+    const SQL = await initSqlJs({ wasmBinary: wasmFile.buffer.slice(wasmFile.byteOffset, wasmFile.byteOffset + wasmFile.byteLength) });
     const sqliteDb = new SQL.Database(buffer);
 
     // Read all tables from SQLite

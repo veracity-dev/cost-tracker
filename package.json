@@ -15,7 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "dotenv -e .env.local -- tsx src/lib/db/seed.ts",
-    "db:setup": "pnpm db:generate && pnpm db:seed"
+    "db:setup": "pnpm db:generate && pnpm db:seed",
+    "postinstall": "cp node_modules/sql.js/dist/sql-wasm.wasm ./sql-wasm.wasm 2>/dev/null || true"
   },
   "dependencies": {
     "@aws-sdk/client-cost-explorer": "^3.998.0",

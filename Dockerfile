@@ -34,6 +34,9 @@ COPY --from=builder /app/src/lib/db/schema.ts ./src/lib/db/schema.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/package.json ./package.json
 
+# Copy sql.js WASM binary for SQLite backup import
+COPY --from=builder /app/node_modules/sql.js/dist/sql-wasm.wasm ./sql-wasm.wasm
+
 EXPOSE 3000
 
 CMD ["sh", "-c", "npx tsx src/lib/db/seed.ts && node server.js"]

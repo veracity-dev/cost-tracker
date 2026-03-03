@@ -673,11 +673,11 @@ export default function SettingsPage() {
           </div>
           <div className="border-t pt-4">
             <p className="mb-2 text-sm text-muted-foreground">
-              Import data from a JSON backup file. This will replace all existing data.
+              Import data from a SQLite backup (.db) file. This will replace all existing data.
             </p>
             <input
               type="file"
-              accept=".json,.db"
+              accept=".db"
               id="backup-import"
               className="hidden"
               onChange={async (e) => {
@@ -685,23 +685,20 @@ export default function SettingsPage() {
                 if (!file) return;
                 e.target.value = "";
 
+                if (!file.name.endsWith(".db")) {
+                  toast.error("Please select a .db SQLite backup file.");
+                  return;
+                }
+
                 if (!confirm("This will replace ALL existing data. Are you sure?")) return;
 
                 try {
-                  let jsonData: unknown;
-
-                  if (file.name.endsWith(".json")) {
-                    const text = await file.text();
-                    jsonData = JSON.parse(text);
-                  } else {
-                    toast.error("Please provide a JSON backup file.");
-                    return;
-                  }
+                  const formData = new FormData();
+                  formData.append("file", file);
 
                   const res = await fetch("/api/backup", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(jsonData),
+                    body: formData,
                   });
 
                   const result = await res.json();
@@ -713,10 +710,9 @@ export default function SettingsPage() {
                   toast.success(
                     `Imported: ${result.imported.services} services, ${result.imported.costRecords} cost records, ${result.imported.serviceAccounts} accounts`
                   );
-                  // Reload to reflect imported data
                   window.location.reload();
                 } catch (err) {
-                  toast.error("Failed to parse or import backup file");
+                  toast.error("Failed to import backup file");
                 }
               }}
             />
@@ -725,7 +721,7 @@ export default function SettingsPage() {
               onClick={() => document.getElementById("backup-import")?.click()}
             >
               <Upload className="mr-2 h-4 w-4" />
-              Import Backup
+              Import SQLite Backup
             </Button>
           </div>
         </CardContent>

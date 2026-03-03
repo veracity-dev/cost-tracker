@@ -14,7 +14,7 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx src/lib/db/seed.ts",
+    "db:seed": "dotenv -e .env.local -- tsx src/lib/db/seed.ts",
     "db:setup": "pnpm db:generate && pnpm db:seed"
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",

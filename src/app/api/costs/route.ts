@@ -90,5 +90,58 @@ export async function POST(request: Request) {
     })
     .returning();
 
+  // Sync to bill-tracker
+  await syncToBillTracker(accountId, year, month, roundedAmount, notes, paymentStatus);
+
   return NextResponse.json(result[0], { status: 201 });
+}
+
+async function syncToBillTracker(
+  accountId: number,
+  year: number,
+  month: number,
+  amount: number,
+  notes?: string,
+  paymentStatus?: string,
+  action?: string
+) {
+  const billTrackerUrl = process.env.BILL_TRACKER_URL;
+  const webhookSecret = process.env.BILL_TRACKER_WEBHOOK_SECRET;
+  if (!billTrackerUrl) return;
+
+  try {
+    // Look up service name and entity name for this account
+    const account = await db
+      .select({
+        serviceName: services.name,
+        entityName: entities.name,
+      })
+      .from(serviceAccounts)
+      .innerJoin(services, eq(serviceAccounts.serviceId, services.id))
+      .leftJoin(entities, eq(serviceAccounts.entityId, entities.id))
+      .where(eq(serviceAccounts.id, accountId))
+      .then((rows) => rows[0]);
+
+    if (!account) return;
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (webhookSecret) headers["Authorization"] = `Bearer ${webhookSecret}`;
+
+    await fetch(`${billTrackerUrl}/api/webhook/cost-sync`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        serviceName: account.serviceName,
+        entityName: account.entityName,
+        year,
+        month,
+        amount,
+        paymentStatus: paymentStatus || "pending",
+        notes,
+        action: action || "upsert",
+      }),
+    });
+  } catch (err) {
+    console.error("Failed to sync to bill-tracker:", err);
+  }
 }
